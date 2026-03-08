@@ -549,7 +549,197 @@ KISAN-AI/
 
 ---
 
-## 🛠️ Tech Stack
+## � Voice Alerts — ElevenLabs → WhatsApp
+
+This is KISAN AI's most impactful feature. Instead of sending a text message that 40% of farmers cannot read, the system generates a **natural-sounding voice note in the farmer's language** and delivers it as a **WhatsApp audio message** to their phone.
+
+### How It Works — Step by Step
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│           VOICE ALERT PIPELINE — FULL FLOW                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  STEP 1 — AI GENERATES ADVISORY                                             │
+│  ─────────────────────────────────                                          │
+│  Gemini 2.5 Flash reads live satellite data and writes:                     │
+│                                                                             │
+│  "किसान भाई, बढ़ती गर्मी और मिट्टी में नमी की भारी कमी के कारण           │
+│   आपके अंगूर के दाने सिकुड़ सकते हैं। आज शाम को ड्रिप से                │
+│   हल्की सिंचाई करें।"                                                      │
+│                                │                                            │
+│                                ▼                                            │
+│  STEP 2 — ELEVENLABS CONVERTS TEXT TO VOICE                                 │
+│  ───────────────────────────────────────────                                │
+│  Model: eleven_multilingual_v2  (supports Hindi + all Indian languages)     │
+│  Voice: Configurable (default: natural Indian-accented voice)               │
+│  Output: MP3 file (~494 KB for a 3-sentence advisory)                       │
+│  Cached: Yes — same advisory text reuses existing MP3                       │
+│                                │                                            │
+│                                ▼                                            │
+│  STEP 3 — TWILIO ASSETS HOSTS THE AUDIO                                     │
+│  ──────────────────────────────────────────                                 │
+│  MP3 is uploaded to Twilio's own serverless CDN                             │
+│  → No ngrok, no third-party hosting needed                                  │
+│  → Twilio builds and deploys in ~15–30 seconds                              │
+│  → Public HTTPS URL: https://kisanai-{hash}.twil.io/kisan_{hash}.mp3       │
+│  → URL is cached locally so second send is instant                          │
+│                                │                                            │
+│                                ▼                                            │
+│  STEP 4 — TWILIO SENDS WHATSAPP VOICE NOTE                                  │
+│  ────────────────────────────────────────────                               │
+│  Twilio API sends a WhatsApp message with:                                  │
+│  • Body text: "🌾 Kisan AI — आपकी फसल के लिए आवाज़ सलाह सुनें:"            │
+│  • media_url: the Twilio CDN MP3 link                                       │
+│  → Farmer receives a playable audio note on WhatsApp                        │
+│  → Works on ANY phone that has WhatsApp (no app install needed)             │
+│  → No literacy required — just tap and listen                               │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### What the Farmer Receives on WhatsApp
+
+```
+┌─────────────────────────────────┐
+│  📱  WhatsApp                   │
+│  ─────────────────────────────  │
+│                                 │
+│  🌾  Kisan AI                   │
+│  ──────────────                 │
+│  🌾 Kisan AI — आपकी फसल के     │
+│  लिए आवाज़ सलाह सुनें:          │
+│                                 │
+│  ┌───────────────────────────┐  │
+│  │  🎵  ▶  ━━━━━━━━━━  0:12  │  │
+│  └───────────────────────────┘  │
+│  (tap to hear Hindi advisory)   │
+│                                 │
+│  ✓✓  08 Mar, 09:40 AM          │
+└─────────────────────────────────┘
+```
+
+### Setting Up ElevenLabs (Free Tier — 10,000 chars/month)
+
+**1. Get your API key:**
+```
+① Go to: https://elevenlabs.io
+② Sign up (free)
+③ Click your profile icon → top right
+④ Click "API Key"
+⑤ Copy the key
+```
+
+**2. Choose a voice (optional):**
+```
+① Go to: https://elevenlabs.io/voice-library
+② Browse voices — filter by language "Hindi" for best results
+③ Click any voice → "Add to VoiceLab"
+④ Go to "VoiceLab" → copy the Voice ID
+```
+
+**3. Set in `.env`:**
+```env
+ELEVENLABS_API_KEY=your_api_key_here
+ELEVENLABS_VOICE_ID=your_voice_id_here   # e.g. 56k72tYpS6hbRADdszYg
+```
+
+### Triggering a Voice Alert — 3 Ways
+
+**Way 1 — REST API (programmatic):**
+```bash
+curl -X POST http://localhost:5000/api/voice \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": "+916377866035",
+    "village": "Nashik",
+    "crop": "grapes",
+    "lang": "hi"
+  }'
+```
+
+**Response:**
+```json
+{
+  "status": "sent",
+  "sid": "MM840dbe2e602d66ad3fc6d95df977358a",
+  "type": "voice",
+  "audio_url": "https://kisanai-8bcedbffd8f4.twil.io/kisan_8bcedbffd8f4.mp3",
+  "chars_generated": 343
+}
+```
+
+**Way 2 — Voice Preview (generate MP3 without sending, for testing):**
+```bash
+curl -X POST http://localhost:5000/api/voice/preview \
+  -H "Content-Type: application/json" \
+  -d '{"text": "आज सिंचाई करें।", "lang": "hi"}'
+```
+MP3 is saved to `static/audio/` and can be played locally.
+
+**Way 3 — Python (directly from code):**
+```python
+from dotenv import load_dotenv; load_dotenv()
+from ai.gemini import get_gemini_advisory
+from ai.voice import send_whatsapp_voice
+
+# 1. Get Gemini advisory
+adv = get_gemini_advisory(
+    village="Nashik", state="Maharashtra", crop="grapes",
+    soil_moisture=8.1, ndvi=0.394, rainfall_7d=0.0,
+    temp_max=37.3, humidity=61, et0=6.19,
+    lang_code="hi"
+)
+
+# 2. Send as WhatsApp voice note
+result = send_whatsapp_voice(
+    advisory_text=adv["advisory"],
+    to_number="+916377866035",   # farmer's WhatsApp number
+    lang_code="hi",
+)
+print(result)
+# → {'status': 'sent', 'sid': 'MM...', 'type': 'voice', 'audio_url': 'https://...'}
+```
+
+### Caching — Free Quota Protection
+
+Every advisory text is hashed with MD5. If the same advisory was already generated (e.g. same village, same satellite conditions), the existing MP3 and Twilio CDN URL are reused instantly — **no ElevenLabs chars consumed, no rebuild needed**.
+
+```
+First call (cold):   15s ElevenLabs + 20s Twilio build = ~35s total
+Second call (warm):  < 1s — served from local .url cache file
+```
+
+Cache files stored in `static/audio/`:
+```
+kisan_8bcedbffd8f4.mp3   ← audio file
+kisan_8bcedbffd8f4.url   ← cached Twilio CDN URL
+```
+
+### Fallback Chain
+
+If any step fails, the system degrades gracefully:
+
+```
+ElevenLabs TTS succeeds?
+    YES → Twilio Assets upload → WhatsApp voice note  ✅
+    NO  → Skip to text fallback
+
+Twilio Assets upload succeeds?
+    YES → WhatsApp voice note  ✅
+    NO  → Try PUBLIC_BASE_URL (ngrok) if set
+
+PUBLIC_BASE_URL set?
+    YES → WhatsApp voice note via ngrok  ✅
+    NO  → Send plain text WhatsApp message  📝
+         (still useful, farmer reads or shows to someone)
+```
+
+The farmer always gets something — voice when possible, text when not.
+
+---
+
+## �🛠️ Tech Stack
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
