@@ -1,0 +1,56 @@
+# render.yaml — KISAN AI Render Blueprint
+# Deploy at: https://dashboard.render.com → New → Blueprint
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: kisan-ai
+    runtime: python
+    region: singapore          # closest to India
+    plan: free                 # free tier — 512 MB RAM, sleeps after 15 min idle
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 2 --threads 2 --bind 0.0.0.0:$PORT --timeout 120
+    healthCheckPath: /health
+
+    envVars:
+      # ── Flask ──────────────────────────────────────────────────────────────
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_SECRET_KEY
+        generateValue: true          # Render auto-generates a secure random value
+
+      # ── Gemini AI ──────────────────────────────────────────────────────────
+      - key: GEMINI_API_KEY
+        sync: false                  # set manually in Render dashboard
+
+      # ── ElevenLabs TTS ─────────────────────────────────────────────────────
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_VOICE_ID
+        value: 56k72tYpS6hbRADdszYg
+
+      # ── Twilio WhatsApp ────────────────────────────────────────────────────
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_WHATSAPP_FROM
+        value: "whatsapp:+14155238886"
+
+      # ── AgroMonitoring (optional NDVI) ────────────────────────────────────
+      - key: AGROMONITORING_API_KEY
+        sync: false
+
+      # ── Public URL ────────────────────────────────────────────────────────
+      # Render auto-sets RENDER_EXTERNAL_URL; app falls back to that.
+      # Set PUBLIC_BASE_URL manually in Render dashboard after first deploy
+      # if you need to override (e.g. custom domain).
+      - key: PUBLIC_BASE_URL
+        sync: false
+
+      # ── Alerts file (ephemeral on Render — Pathway not used in web mode) ──
+      - key: ALERTS_FILE
+        value: /tmp/kisan_alerts.jsonl
+
+      - key: POLL_INTERVAL_SECONDS
+        value: "3600"

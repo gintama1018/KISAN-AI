@@ -20,6 +20,7 @@ from datetime import datetime
 from threading import Lock
 
 from flask import Flask, jsonify, render_template, request, Response
+from werkzeug.middleware.proxy_fix import ProxyFix
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -46,6 +47,8 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "kisan-ai-dev-key")
+# Trust Render / nginx reverse proxy headers so request.host_url is correct
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 ALERTS_FILE = os.getenv("ALERTS_FILE", "/tmp/kisan_alerts.jsonl")
 
@@ -732,7 +735,11 @@ def voice_alert():
     if not custom_text:
         return jsonify({"error": "No advisory text available"}), 400
 
-    public_base_url = os.getenv("PUBLIC_BASE_URL", request.host_url.rstrip("/"))
+    public_base_url = (
+        os.getenv("PUBLIC_BASE_URL")
+        or os.getenv("RENDER_EXTERNAL_URL")   # Render auto-sets this
+        or request.host_url.rstrip("/")
+    )
     result = send_whatsapp_voice(
         advisory_text=custom_text,
         to_number=to_number,

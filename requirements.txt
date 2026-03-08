@@ -25,5 +25,5 @@ twilio>=8.0.0
 # ─── Optional: WhatsApp alerts ────────────────────────────────────────────────
 # twilio>=8.0.0
 
-# ─── Production deployment ────────────────────────────────────────────────────
-# gunicorn>=21.0.0
+# ─── Production deployment (Render / Railway / Fly.io) ──────────────────────
+gunicorn>=21.2.0
