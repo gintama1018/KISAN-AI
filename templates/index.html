@@ -256,7 +256,10 @@
       <div class="advisory-text" id="advisoryText">—</div>
       <div class="advisory-actions">
         <button class="btn-whatsapp" onclick="sendWhatsApp()">
-          💬 Send via WhatsApp
+          💬 Text WhatsApp
+        </button>
+        <button class="btn-voice" onclick="sendVoiceWhatsApp()">
+          🎙️ Voice WhatsApp
         </button>
         <button class="btn-copy" onclick="copyAdvisory()">
           📋 Copy Text
@@ -578,6 +581,48 @@ async function sendWhatsApp() {
     }
   } catch (e) {
     alert('Failed to send. Check console for details.');
+  }
+}
+
+async function sendVoiceWhatsApp() {
+  const phone = prompt('Enter farmer phone number (with country code):\nExample: +919876543210');
+  if (!phone) return;
+
+  const el = document.getElementById('whatsappResult');
+  el.classList.remove('hidden');
+  el.textContent = '⏳ Generating voice with ElevenLabs...';
+  el.className = 'whatsapp-result warning';
+
+  try {
+    const resp = await fetch('/api/voice', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        to: phone,
+        village: currentData?.village,
+        crop: currentData?.crop,
+        lang: document.getElementById('langSelect').value,
+        text: document.getElementById('advisoryText').textContent,
+      })
+    });
+    const result = await resp.json();
+
+    if (result.status === 'sent' && result.type === 'voice') {
+      el.textContent = '✅ Voice note sent via WhatsApp!';
+      el.className = 'whatsapp-result success';
+    } else if (result.status === 'sent') {
+      el.textContent = '✅ Sent (text fallback — check ElevenLabs key in Render dashboard)';
+      el.className = 'whatsapp-result warning';
+    } else if (result.status === 'demo') {
+      el.textContent = '📋 Demo mode: Twilio not configured.';
+      el.className = 'whatsapp-result warning';
+    } else {
+      el.textContent = `❌ ${result.error || JSON.stringify(result)}`;
+      el.className = 'whatsapp-result error';
+    }
+  } catch (e) {
+    el.textContent = '❌ Request failed. Check Render logs.';
+    el.className = 'whatsapp-result error';
   }
 }
 

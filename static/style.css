@@ -626,6 +626,21 @@ body {
 }
 .btn-whatsapp:hover { background: #128C7E; }
 
+.btn-voice {
+  flex: 1;
+  padding: 12px;
+  background: #FF6F00;
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+.btn-voice:hover { background: #E65100; }
+
 .btn-copy {
   flex: 1;
   padding: 12px;
