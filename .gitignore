@@ -1,0 +1,22 @@
+# ── Secrets — NEVER commit these ──────────────────────────────────────────────
+.env
+*.env
+*.key
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# ── Audio cache (generated at runtime) ────────────────────────────────────────
+static/audio/*.mp3
+static/audio/*.url
+
+# ── OS / Editor ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/settings.json

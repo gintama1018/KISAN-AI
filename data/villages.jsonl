@@ -1,0 +1,55 @@
+{"village_id": "V001", "village_name": "Nashik", "lat": 20.0059, "lon": 73.7897, "state": "Maharashtra", "crop": "grapes", "district": "Nashik"}
+{"village_id": "V002", "village_name": "Pune", "lat": 18.5204, "lon": 73.8567, "state": "Maharashtra", "crop": "sugarcane", "district": "Pune"}
+{"village_id": "V003", "village_name": "Aurangabad", "lat": 19.8762, "lon": 75.3433, "state": "Maharashtra", "crop": "cotton", "district": "Aurangabad"}
+{"village_id": "V004", "village_name": "Solapur", "lat": 17.6805, "lon": 75.9064, "state": "Maharashtra", "crop": "wheat", "district": "Solapur"}
+{"village_id": "V005", "village_name": "Varanasi", "lat": 25.3176, "lon": 82.9739, "state": "Uttar Pradesh", "crop": "wheat", "district": "Varanasi"}
+{"village_id": "V006", "village_name": "Lucknow", "lat": 26.8467, "lon": 80.9462, "state": "Uttar Pradesh", "crop": "sugarcane", "district": "Lucknow"}
+{"village_id": "V007", "village_name": "Agra", "lat": 27.1767, "lon": 78.0081, "state": "Uttar Pradesh", "crop": "wheat", "district": "Agra"}
+{"village_id": "V008", "village_name": "Anantapur", "lat": 14.6819, "lon": 77.6006, "state": "Andhra Pradesh", "crop": "groundnut", "district": "Anantapur"}
+{"village_id": "V009", "village_name": "Guntur", "lat": 16.3067, "lon": 80.4365, "state": "Andhra Pradesh", "crop": "cotton", "district": "Guntur"}
+{"village_id": "V010", "village_name": "Kurnool", "lat": 15.8281, "lon": 78.0374, "state": "Andhra Pradesh", "crop": "paddy", "district": "Kurnool"}
+{"village_id": "V011", "village_name": "Madurai", "lat": 9.9252, "lon": 78.1198, "state": "Tamil Nadu", "crop": "paddy", "district": "Madurai"}
+{"village_id": "V012", "village_name": "Coimbatore", "lat": 11.0168, "lon": 76.9558, "state": "Tamil Nadu", "crop": "cotton", "district": "Coimbatore"}
+{"village_id": "V013", "village_name": "Thanjavur", "lat": 10.7870, "lon": 79.1378, "state": "Tamil Nadu", "crop": "paddy", "district": "Thanjavur"}
+{"village_id": "V014", "village_name": "Tirunelveli", "lat": 8.7139, "lon": 77.7567, "state": "Tamil Nadu", "crop": "banana", "district": "Tirunelveli"}
+{"village_id": "V015", "village_name": "Ludhiana", "lat": 30.9009, "lon": 75.8573, "state": "Punjab", "crop": "wheat", "district": "Ludhiana"}
+{"village_id": "V016", "village_name": "Amritsar", "lat": 31.6340, "lon": 74.8723, "state": "Punjab", "crop": "wheat", "district": "Amritsar"}
+{"village_id": "V017", "village_name": "Patiala", "lat": 30.3398, "lon": 76.3869, "state": "Punjab", "crop": "rice", "district": "Patiala"}
+{"village_id": "V018", "village_name": "Hisar", "lat": 29.1492, "lon": 75.7217, "state": "Haryana", "crop": "wheat", "district": "Hisar"}
+{"village_id": "V019", "village_name": "Karnal", "lat": 29.6857, "lon": 76.9905, "state": "Haryana", "crop": "rice", "district": "Karnal"}
+{"village_id": "V020", "village_name": "Rohtak", "lat": 28.8955, "lon": 76.5776, "state": "Haryana", "crop": "wheat", "district": "Rohtak"}
+{"village_id": "V021", "village_name": "Jaipur", "lat": 26.9124, "lon": 75.7873, "state": "Rajasthan", "crop": "wheat", "district": "Jaipur"}
+{"village_id": "V022", "village_name": "Jodhpur", "lat": 26.2389, "lon": 73.0243, "state": "Rajasthan", "crop": "bajra", "district": "Jodhpur"}
+{"village_id": "V023", "village_name": "Kota", "lat": 25.2138, "lon": 75.8648, "state": "Rajasthan", "crop": "soybean", "district": "Kota"}
+{"village_id": "V024", "village_name": "Ajmer", "lat": 26.4499, "lon": 74.6399, "state": "Rajasthan", "crop": "wheat", "district": "Ajmer"}
+{"village_id": "V025", "village_name": "Bhopal", "lat": 23.2599, "lon": 77.4126, "state": "Madhya Pradesh", "crop": "soybean", "district": "Bhopal"}
+{"village_id": "V026", "village_name": "Indore", "lat": 22.7196, "lon": 75.8577, "state": "Madhya Pradesh", "crop": "soybean", "district": "Indore"}
+{"village_id": "V027", "village_name": "Jabalpur", "lat": 23.1815, "lon": 79.9864, "state": "Madhya Pradesh", "crop": "wheat", "district": "Jabalpur"}
+{"village_id": "V028", "village_name": "Raipur", "lat": 21.2514, "lon": 81.6296, "state": "Chhattisgarh", "crop": "paddy", "district": "Raipur"}
+{"village_id": "V029", "village_name": "Bilaspur", "lat": 22.0796, "lon": 82.1391, "state": "Chhattisgarh", "crop": "paddy", "district": "Bilaspur"}
+{"village_id": "V030", "village_name": "Patna", "lat": 25.5941, "lon": 85.1376, "state": "Bihar", "crop": "wheat", "district": "Patna"}
+{"village_id": "V031", "village_name": "Gaya", "lat": 24.7955, "lon": 84.9994, "state": "Bihar", "crop": "paddy", "district": "Gaya"}
+{"village_id": "V032", "village_name": "Muzaffarpur", "lat": 26.1209, "lon": 85.3647, "state": "Bihar", "crop": "wheat", "district": "Muzaffarpur"}
+{"village_id": "V033", "village_name": "Kolkata", "lat": 22.5726, "lon": 88.3639, "state": "West Bengal", "crop": "paddy", "district": "South 24 Parganas"}
+{"village_id": "V034", "village_name": "Burdwan", "lat": 23.2324, "lon": 87.8615, "state": "West Bengal", "crop": "paddy", "district": "Burdwan"}
+{"village_id": "V035", "village_name": "Midnapore", "lat": 22.4258, "lon": 87.3188, "state": "West Bengal", "crop": "paddy", "district": "West Midnapore"}
+{"village_id": "V036", "village_name": "Bangalore", "lat": 12.9716, "lon": 77.5946, "state": "Karnataka", "crop": "ragi", "district": "Bangalore Urban"}
+{"village_id": "V037", "village_name": "Mysore", "lat": 12.2958, "lon": 76.6394, "state": "Karnataka", "crop": "sugarcane", "district": "Mysuru"}
+{"village_id": "V038", "village_name": "Hubli", "lat": 15.3647, "lon": 75.1240, "state": "Karnataka", "crop": "cotton", "district": "Dharwad"}
+{"village_id": "V039", "village_name": "Bellary", "lat": 15.1394, "lon": 76.9214, "state": "Karnataka", "crop": "cotton", "district": "Ballari"}
+{"village_id": "V040", "village_name": "Hyderabad", "lat": 17.3850, "lon": 78.4867, "state": "Telangana", "crop": "cotton", "district": "Rangareddy"}
+{"village_id": "V041", "village_name": "Warangal", "lat": 17.9784, "lon": 79.5941, "state": "Telangana", "crop": "cotton", "district": "Warangal"}
+{"village_id": "V042", "village_name": "Nalgonda", "lat": 17.0575, "lon": 79.2672, "state": "Telangana", "crop": "paddy", "district": "Nalgonda"}
+{"village_id": "V043", "village_name": "Ahmedabad", "lat": 23.0225, "lon": 72.5714, "state": "Gujarat", "crop": "cotton", "district": "Ahmedabad"}
+{"village_id": "V044", "village_name": "Surat", "lat": 21.1702, "lon": 72.8311, "state": "Gujarat", "crop": "sugarcane", "district": "Surat"}
+{"village_id": "V045", "village_name": "Rajkot", "lat": 22.3039, "lon": 70.8022, "state": "Gujarat", "crop": "groundnut", "district": "Rajkot"}
+{"village_id": "V046", "village_name": "Anand", "lat": 22.5645, "lon": 72.9289, "state": "Gujarat", "crop": "wheat", "district": "Anand"}
+{"village_id": "V047", "village_name": "Bhubaneswar", "lat": 20.2961, "lon": 85.8245, "state": "Odisha", "crop": "paddy", "district": "Khordha"}
+{"village_id": "V048", "village_name": "Cuttack", "lat": 20.4625, "lon": 85.8830, "state": "Odisha", "crop": "paddy", "district": "Cuttack"}
+{"village_id": "V049", "village_name": "Sambalpur", "lat": 21.4669, "lon": 83.9756, "state": "Odisha", "crop": "paddy", "district": "Sambalpur"}
+{"village_id": "V050", "village_name": "Thrissur", "lat": 10.5276, "lon": 76.2144, "state": "Kerala", "crop": "banana", "district": "Thrissur"}
+{"village_id": "V051", "village_name": "Palakkad", "lat": 10.7867, "lon": 76.6548, "state": "Kerala", "crop": "paddy", "district": "Palakkad"}
+{"village_id": "V052", "village_name": "Guwahati", "lat": 26.1445, "lon": 91.7362, "state": "Assam", "crop": "paddy", "district": "Kamrup"}
+{"village_id": "V053", "village_name": "Dibrugarh", "lat": 27.4728, "lon": 94.9120, "state": "Assam", "crop": "tea", "district": "Dibrugarh"}
+{"village_id": "V054", "village_name": "Nagpur", "lat": 21.1458, "lon": 79.0882, "state": "Maharashtra", "crop": "orange", "district": "Nagpur"}
+{"village_id": "V055", "village_name": "Amravati", "lat": 20.9333, "lon": 77.7500, "state": "Maharashtra", "crop": "cotton", "district": "Amravati"}

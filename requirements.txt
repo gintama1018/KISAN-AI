@@ -1,0 +1,29 @@
+# ─── Core (required) ──────────────────────────────────────────────────────────
+flask>=2.3.0
+requests>=2.31.0
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+folium>=0.14.0
+deep-translator>=1.11.0
+python-dotenv>=1.0.0
+
+# ─── AI APIs ──────────────────────────────────────────────────────────────────
+# Google Gemini 2.0 Flash (expert natural language advisory, free tier)
+google-genai>=1.0.0
+# ElevenLabs TTS (voice alerts in Indian languages for illiterate farmers)
+elevenlabs>=1.0.0
+# Twilio WhatsApp delivery
+twilio>=8.0.0
+
+# ─── Optional: Pathway real-time streaming (Linux/Docker recommended) ─────────
+# pathway>=0.8.0
+
+# ─── Optional: rasterio for GeoTIFF processing (needs GDAL) ──────────────────
+# rasterio>=1.3.0
+
+# ─── Optional: WhatsApp alerts ────────────────────────────────────────────────
+# twilio>=8.0.0
+
+# ─── Production deployment ────────────────────────────────────────────────────
+# gunicorn>=21.0.0
