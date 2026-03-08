@@ -122,6 +122,25 @@ def translate_advisory(text: str, lang_code: str) -> str:
         return text
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Localised section labels — fixes Hindi-only headers for all 10 languages
+# ─────────────────────────────────────────────────────────────────────────────
+
+_SECTION_LABELS = {
+    "hi": {"water": "पानी",     "pest": "कीट",   "sow": "बुआई"},
+    "mr": {"water": "पाणी",     "pest": "कीड",   "sow": "पेरणी"},
+    "ta": {"water": "நீர்",     "pest": "பூச்சி","sow": "விதைப்பு"},
+    "te": {"water": "నీరు",     "pest": "పురుగు","sow": "విత్తనం"},
+    "bn": {"water": "জল",       "pest": "পোকা",  "sow": "বপন"},
+    "kn": {"water": "ನೀರು",     "pest": "ಕೀಟ",   "sow": "ಬಿತ್ತನೆ"},
+    "pa": {"water": "ਪਾਣੀ",     "pest": "ਕੀੜਾ",  "sow": "ਬਿਜਾਈ"},
+    "gu": {"water": "પાણી",     "pest": "જીવાત", "sow": "વાવણી"},
+    "or": {"water": "ଜଳ",       "pest": "ପୋକ",   "sow": "ବୁଣିବା"},
+    "ml": {"water": "വെള്ളം",   "pest": "കീടം",  "sow": "വിതയ്ക്കൽ"},
+    "en": {"water": "Water",    "pest": "Pest",  "sow": "Sowing"},
+}
+
+
 def build_full_advisory(
     drought: dict,
     pest: dict,
@@ -132,7 +151,9 @@ def build_full_advisory(
 ) -> str:
     """
     Build a complete WhatsApp/SMS-ready advisory in the given language.
+    Section labels (Water / Pest / Sowing) are localised per language.
     """
+    lbl = _SECTION_LABELS.get(lang_code, _SECTION_LABELS["hi"])
     lines = []
 
     header = f"🌾 KISAN AI — {village_name}" if village_name else "🌾 KISAN AI"
@@ -145,7 +166,7 @@ def build_full_advisory(
     drought_icon = drought.get("emoji", "")
     drought_level = drought.get("level", "")
     drought_action = drought.get("action", "")
-    lines.append(f"💧 पानी: {drought_icon} {drought_level}")
+    lines.append(f"💧 {lbl['water']}: {drought_icon} {drought_level}")
     lines.append(translate_advisory(drought_action, lang_code))
     lines.append("")
 
@@ -154,7 +175,7 @@ def build_full_advisory(
     pest_name = pest.get("pest", "")
     pest_risk = pest.get("risk", "")
     pest_action = pest.get("action", "")
-    lines.append(f"🐛 कीट: {pest_icon} {pest_name} ({pest_risk})")
+    lines.append(f"🐛 {lbl['pest']}: {pest_icon} {pest_name} ({pest_risk})")
     lines.append(translate_advisory(pest_action, lang_code))
     lines.append("")
 
@@ -162,7 +183,7 @@ def build_full_advisory(
     sow_icon = sowing.get("emoji", "")
     sow_decision = sowing.get("decision", "")
     sow_action = sowing.get("action", "")
-    lines.append(f"🌱 बुआई: {sow_icon} {sow_decision}")
+    lines.append(f"🌱 {lbl['sow']}: {sow_icon} {sow_decision}")
     lines.append(translate_advisory(sow_action, lang_code))
     lines.append("")
 

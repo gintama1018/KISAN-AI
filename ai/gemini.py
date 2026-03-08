@@ -1,4 +1,4 @@
-﻿"""
+"""
 ai/gemini.py
 ------------
 KISAN AI â€” Gemini AI Advisory Engine (Accuracy v2.0)
