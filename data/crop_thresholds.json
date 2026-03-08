@@ -1,21 +1,311 @@
 {
   "wheat": {
-    "soil_moisture_critical": 20,
-    "soil_moisture_moderate": 30,
-    "soil_moisture_optimal": 45,
+    "soil_moisture_critical": 25,
+    "soil_moisture_warning":  35,
+    "soil_moisture_optimal":  50,
     "temp_min_sowing": 10,
     "temp_max_sowing": 25,
-    "temp_germination": 20,
-    "rainfall_weekly_min": 5,
-    "ndvi_healthy": 0.55,
-    "ndvi_moderate": 0.35,
-    "ndvi_critical": 0.20,
+    "temp_max_stress": 32,
+    "pest_risk_temp_range": [15, 28],
     "pest_humidity_threshold": 75,
+    "ndvi_healthy":   0.55,
+    "ndvi_moderate":  0.35,
+    "ndvi_critical":  0.20,
+    "water_per_day_mm": 3.5,
     "season": "rabi",
     "sowing_months": [10, 11, 12],
     "harvest_months": [3, 4],
-    "water_requirement_mm_day": 4.0
+    "growth_stages": {
+      "germination": "0-21 days",
+      "tillering":   "21-60 days",
+      "flowering":   "60-90 days",
+      "grain_fill":  "90-110 days",
+      "maturity":    "110-130 days"
+    },
+    "common_pests": [
+      {"name_en": "Yellow Rust",    "name_hi": "पीली रतुआ",     "temp_range": [10, 20], "humidity_min": 70},
+      {"name_en": "Aphid",          "name_hi": "माहू",           "temp_range": [15, 28], "humidity_min": 60},
+      {"name_en": "Armyworm",       "name_hi": "सेना कीड़ा",     "temp_range": [20, 30], "humidity_min": 65}
+    ],
+    "icar_advisory_url": "https://icar.org.in/wheat"
   },
+
+  "rice": {
+    "soil_moisture_critical": 40,
+    "soil_moisture_warning":  55,
+    "soil_moisture_optimal":  90,
+    "temp_min_sowing": 22,
+    "temp_max_sowing": 35,
+    "temp_max_stress": 38,
+    "pest_risk_temp_range": [25, 35],
+    "pest_humidity_threshold": 80,
+    "ndvi_healthy":   0.60,
+    "ndvi_moderate":  0.40,
+    "ndvi_critical":  0.25,
+    "water_per_day_mm": 6.0,
+    "season": "kharif",
+    "sowing_months": [6, 7],
+    "harvest_months": [10, 11],
+    "growth_stages": {
+      "nursery":      "0-25 days",
+      "transplanting":"25-35 days",
+      "tillering":    "35-65 days",
+      "panicle":      "65-85 days",
+      "flowering":    "85-100 days",
+      "maturity":     "100-130 days"
+    },
+    "common_pests": [
+      {"name_en": "Blast Fungus",    "name_hi": "ब्लास्ट रोग",    "temp_range": [24, 30], "humidity_min": 90},
+      {"name_en": "Brown Planthopper","name_hi": "भूरा फुदका",     "temp_range": [25, 35], "humidity_min": 80},
+      {"name_en": "Stem Borer",      "name_hi": "तना छेदक",       "temp_range": [26, 34], "humidity_min": 75}
+    ],
+    "icar_advisory_url": "https://icar.org.in/rice"
+  },
+
+  "paddy": {
+    "soil_moisture_critical": 40,
+    "soil_moisture_warning":  55,
+    "soil_moisture_optimal":  90,
+    "temp_min_sowing": 22,
+    "temp_max_sowing": 35,
+    "temp_max_stress": 38,
+    "pest_risk_temp_range": [25, 35],
+    "pest_humidity_threshold": 80,
+    "ndvi_healthy":   0.60,
+    "ndvi_moderate":  0.40,
+    "ndvi_critical":  0.25,
+    "water_per_day_mm": 6.5,
+    "season": "kharif",
+    "sowing_months": [6, 7],
+    "harvest_months": [10, 11],
+    "growth_stages": {
+      "nursery": "0-25 days", "transplanting": "25-35 days",
+      "tillering": "35-65 days", "flowering": "85-100 days", "maturity": "100-130 days"
+    },
+    "common_pests": [
+      {"name_en": "Blast Fungus",     "name_hi": "ब्लास्ट रोग",  "temp_range": [24, 30], "humidity_min": 90},
+      {"name_en": "Brown Planthopper","name_hi": "भूरा फुदका",   "temp_range": [25, 35], "humidity_min": 80}
+    ],
+    "icar_advisory_url": "https://icar.org.in/rice"
+  },
+
+  "cotton": {
+    "soil_moisture_critical": 22,
+    "soil_moisture_warning":  32,
+    "soil_moisture_optimal":  45,
+    "temp_min_sowing": 18,
+    "temp_max_sowing": 35,
+    "temp_max_stress": 40,
+    "pest_risk_temp_range": [25, 35],
+    "pest_humidity_threshold": 70,
+    "ndvi_healthy":   0.55,
+    "ndvi_moderate":  0.35,
+    "ndvi_critical":  0.20,
+    "water_per_day_mm": 5.0,
+    "season": "kharif",
+    "sowing_months": [5, 6],
+    "harvest_months": [11, 12, 1],
+    "growth_stages": {
+      "germination": "0-15 days",
+      "seedling":    "15-45 days",
+      "squaring":    "45-75 days",
+      "boll_set":    "75-100 days",
+      "boll_open":   "100-150 days"
+    },
+    "common_pests": [
+      {"name_en": "Bollworm",      "name_hi": "बॉलवर्म",     "temp_range": [25, 35], "humidity_min": 60},
+      {"name_en": "Whitefly",      "name_hi": "सफेद मक्खी", "temp_range": [28, 38], "humidity_min": 50},
+      {"name_en": "Aphid",         "name_hi": "माहू",        "temp_range": [22, 32], "humidity_min": 55},
+      {"name_en": "Thrips",        "name_hi": "थ्रिप्स",    "temp_range": [25, 35], "humidity_min": 50}
+    ],
+    "icar_advisory_url": "https://icar.org.in/cotton"
+  },
+
+  "grapes": {
+    "soil_moisture_critical": 18,
+    "soil_moisture_warning":  28,
+    "soil_moisture_optimal":  42,
+    "temp_min_sowing": 15,
+    "temp_max_sowing": 35,
+    "temp_max_stress": 38,
+    "pest_risk_temp_range": [20, 32],
+    "pest_humidity_threshold": 65,
+    "ndvi_healthy":   0.50,
+    "ndvi_moderate":  0.35,
+    "ndvi_critical":  0.22,
+    "water_per_day_mm": 4.5,
+    "season": "perennial",
+    "sowing_months": [],
+    "harvest_months": [1, 2, 3],
+    "growth_stages": {
+      "dormancy":     "Jan-Feb",
+      "budbreak":     "Feb-Mar",
+      "flowering":    "Mar-Apr",
+      "fruit_set":    "Apr-May",
+      "veraison":     "Nov-Dec",
+      "harvest":      "Jan-Feb"
+    },
+    "common_pests": [
+      {"name_en": "Downy Mildew",  "name_hi": "डाउनी मिल्ड्यू", "temp_range": [18, 28], "humidity_min": 80},
+      {"name_en": "Powdery Mildew","name_hi": "पाउडरी मिल्ड्यू","temp_range": [20, 30], "humidity_min": 50},
+      {"name_en": "Thrips",        "name_hi": "थ्रिप्स",         "temp_range": [25, 36], "humidity_min": 45},
+      {"name_en": "Whitefly",      "name_hi": "सफेद मक्खी",      "temp_range": [28, 38], "humidity_min": 40}
+    ],
+    "icar_advisory_url": "https://icar.org.in/grapes"
+  },
+
+  "sugarcane": {
+    "soil_moisture_critical": 35,
+    "soil_moisture_warning":  50,
+    "soil_moisture_optimal":  65,
+    "temp_min_sowing": 20,
+    "temp_max_sowing": 35,
+    "temp_max_stress": 42,
+    "pest_risk_temp_range": [25, 38],
+    "pest_humidity_threshold": 70,
+    "ndvi_healthy":   0.65,
+    "ndvi_moderate":  0.45,
+    "ndvi_critical":  0.30,
+    "water_per_day_mm": 7.0,
+    "season": "annual",
+    "sowing_months": [2, 3, 10, 11],
+    "harvest_months": [1, 2, 3, 4],
+    "growth_stages": {
+      "germination": "0-35 days",
+      "tillering":   "35-100 days",
+      "grand_growth":"100-270 days",
+      "maturity":    "270-360 days"
+    },
+    "common_pests": [
+      {"name_en": "Early Shoot Borer","name_hi": "अंकुर छेदक",  "temp_range": [27, 35], "humidity_min": 70},
+      {"name_en": "Pyrilla",          "name_hi": "पाइरिला",     "temp_range": [28, 38], "humidity_min": 65},
+      {"name_en": "Red Rot",          "name_hi": "लाल सड़न",    "temp_range": [25, 35], "humidity_min": 80}
+    ],
+    "icar_advisory_url": "https://icar.org.in/sugarcane"
+  },
+
+  "maize": {
+    "soil_moisture_critical": 20,
+    "soil_moisture_warning":  30,
+    "soil_moisture_optimal":  50,
+    "temp_min_sowing": 18,
+    "temp_max_sowing": 35,
+    "temp_max_stress": 38,
+    "pest_risk_temp_range": [22, 35],
+    "pest_humidity_threshold": 70,
+    "ndvi_healthy":   0.60,
+    "ndvi_moderate":  0.40,
+    "ndvi_critical":  0.22,
+    "water_per_day_mm": 4.5,
+    "season": "kharif",
+    "sowing_months": [6, 7],
+    "harvest_months": [9, 10],
+    "growth_stages": {
+      "germination": "0-10 days",
+      "vegetative":  "10-45 days",
+      "tasseling":   "45-60 days",
+      "silking":     "60-70 days",
+      "grain_fill":  "70-100 days",
+      "maturity":    "100-110 days"
+    },
+    "common_pests": [
+      {"name_en": "Fall Armyworm", "name_hi": "फॉल आर्मीवर्म", "temp_range": [22, 30], "humidity_min": 60},
+      {"name_en": "Stem Borer",    "name_hi": "तना छेदक",       "temp_range": [25, 35], "humidity_min": 65},
+      {"name_en": "Aphid",         "name_hi": "माहू",            "temp_range": [20, 28], "humidity_min": 55}
+    ],
+    "icar_advisory_url": "https://icar.org.in/maize"
+  },
+
+  "soybean": {
+    "soil_moisture_critical": 22,
+    "soil_moisture_warning":  33,
+    "soil_moisture_optimal":  48,
+    "temp_min_sowing": 18,
+    "temp_max_sowing": 32,
+    "temp_max_stress": 36,
+    "pest_risk_temp_range": [24, 34],
+    "pest_humidity_threshold": 75,
+    "ndvi_healthy":   0.55,
+    "ndvi_moderate":  0.38,
+    "ndvi_critical":  0.22,
+    "water_per_day_mm": 4.0,
+    "season": "kharif",
+    "sowing_months": [6, 7],
+    "harvest_months": [10, 11],
+    "growth_stages": {
+      "germination": "0-10 days",
+      "vegetative":  "10-35 days",
+      "flowering":   "35-60 days",
+      "pod_fill":    "60-90 days",
+      "maturity":    "90-110 days"
+    },
+    "common_pests": [
+      {"name_en": "Girdle Beetle", "name_hi": "गर्डल बीटल",  "temp_range": [25, 35], "humidity_min": 70},
+      {"name_en": "Yellow Mosaic", "name_hi": "पीला मोज़ेक",  "temp_range": [25, 35], "humidity_min": 65},
+      {"name_en": "Whitefly",      "name_hi": "सफेद मक्खी",  "temp_range": [28, 38], "humidity_min": 50}
+    ],
+    "icar_advisory_url": "https://icar.org.in/soybean"
+  },
+
+  "tomato": {
+    "soil_moisture_critical": 25,
+    "soil_moisture_warning":  38,
+    "soil_moisture_optimal":  55,
+    "temp_min_sowing": 15,
+    "temp_max_sowing": 30,
+    "temp_max_stress": 35,
+    "pest_risk_temp_range": [20, 32],
+    "pest_humidity_threshold": 70,
+    "ndvi_healthy":   0.55,
+    "ndvi_moderate":  0.38,
+    "ndvi_critical":  0.22,
+    "water_per_day_mm": 4.5,
+    "season": "rabi",
+    "sowing_months": [9, 10, 11],
+    "harvest_months": [1, 2, 3],
+    "growth_stages": {
+      "seedling":    "0-30 days",
+      "vegetative":  "30-60 days",
+      "flowering":   "60-80 days",
+      "fruiting":    "80-120 days"
+    },
+    "common_pests": [
+      {"name_en": "Leaf Curl Virus","name_hi": "पत्ती मुड़न रोग","temp_range": [25, 35], "humidity_min": 50},
+      {"name_en": "Early Blight",   "name_hi": "प्रारंभिक झुलसा","temp_range": [22, 30], "humidity_min": 80},
+      {"name_en": "Whitefly",       "name_hi": "सफेद मक्खी",      "temp_range": [28, 38], "humidity_min": 45}
+    ],
+    "icar_advisory_url": "https://icar.org.in/vegetables"
+  },
+
+  "onion": {
+    "soil_moisture_critical": 20,
+    "soil_moisture_warning":  30,
+    "soil_moisture_optimal":  45,
+    "temp_min_sowing": 13,
+    "temp_max_sowing": 28,
+    "temp_max_stress": 33,
+    "pest_risk_temp_range": [18, 30],
+    "pest_humidity_threshold": 70,
+    "ndvi_healthy":   0.45,
+    "ndvi_moderate":  0.30,
+    "ndvi_critical":  0.18,
+    "water_per_day_mm": 3.0,
+    "season": "rabi",
+    "sowing_months": [10, 11, 12],
+    "harvest_months": [3, 4, 5],
+    "growth_stages": {
+      "seedling":  "0-40 days",
+      "bulbing":   "40-90 days",
+      "maturity":  "90-120 days"
+    },
+    "common_pests": [
+      {"name_en": "Thrips",       "name_hi": "थ्रिप्स",        "temp_range": [22, 32], "humidity_min": 45},
+      {"name_en": "Purple Blotch","name_hi": "पर्पल ब्लॉच",   "temp_range": [20, 30], "humidity_min": 80},
+      {"name_en": "Stemphylium",  "name_hi": "स्टेम्फिलियम",  "temp_range": [18, 28], "humidity_min": 75}
+    ],
+    "icar_advisory_url": "https://icar.org.in/vegetables"
+  }
+}
   "rice": {
     "soil_moisture_critical": 60,
     "soil_moisture_moderate": 75,

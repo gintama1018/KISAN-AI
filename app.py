@@ -29,6 +29,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from data.satellite import fetch_all_satellite_data, geocode_village
 from data.ndvi import fetch_ndvi
+from data.accuracy import cross_validate
 from ai.drought import drought_risk_model
 from ai.pest import pest_risk_model
 from ai.sowing import sowing_window_model
@@ -196,6 +197,15 @@ def build_village_advisory(lat: float, lon: float, village_name: str,
             state = v.get("state", "")
             break
 
+    # Cross-validation confidence score (Layer 3)
+    nasa_data = {k: weather.get(k) for k in
+                 ("source", "avg_daily_rainfall_30d", "total_rainfall_30d",
+                  "avg_temp_30d", "rainfall_history")}
+    accuracy = cross_validate(weather, nasa_data, ndvi_data)
+    result["accuracy_confidence"] = accuracy["confidence"]
+    result["accuracy_warnings"]   = accuracy["warnings"]
+    result["rain_validated"]      = accuracy["rain_final"]
+
     gemini = get_gemini_advisory(
         village=village_name, state=state, crop=crop,
         soil_moisture=weather["soil_moisture"],
@@ -205,9 +215,26 @@ def build_village_advisory(lat: float, lon: float, village_name: str,
         humidity=weather["humidity"],
         et0=weather["et0_today"],
         lang_code=lang,
+        # Extended context (v2 — accuracy stack)
+        soil_moisture_deep=weather.get("soil_moisture_deep", 0.0),
+        ndvi_7d_ago=ndvi_data.get("ndvi_7d_ago", ndvi_data["ndvi"]),
+        rainfall_30d=weather.get("total_rainfall_30d", 0.0),
+        normal_rain_30d=weather.get("avg_daily_rainfall_30d", 3.0) * 30,
+        temp_min=weather.get("temp_min", 20.0),
+        forecast_rain_7d=sum(weather.get("forecast_rainfall", []) or []),
+        confidence=accuracy["confidence"],
+        warnings=accuracy["warnings"],
     )
-    result["gemini_advisory"] = gemini.get("advisory", "")
-    result["gemini_source"] = gemini.get("source", "not_configured")
+    result["gemini_advisory"]    = gemini.get("advisory", "")
+    result["gemini_source"]      = gemini.get("source", "not_configured")
+    result["gemini_drought_level"] = gemini.get("drought_level", "")
+    result["gemini_drought_action"]= gemini.get("drought_action", "")
+    result["gemini_pest_risk"]   = gemini.get("pest_risk", "")
+    result["gemini_pest_name"]   = gemini.get("pest_name", "")
+    result["gemini_pest_action"] = gemini.get("pest_action", "")
+    result["gemini_sowing_ready"]= gemini.get("sowing_ready", False)
+    result["gemini_sowing_advice"]= gemini.get("sowing_advice", "")
+    result["gemini_model"]       = gemini.get("model", "")
 
     # Translate requested language if not Hindi
     if lang != "hi":
@@ -591,6 +618,12 @@ def gemini_api():
     except Exception as e:
         return jsonify({"error": "Failed to fetch satellite data"}), 500
 
+    # Cross-validation
+    nasa_data = {k: weather.get(k) for k in
+                 ("source", "avg_daily_rainfall_30d", "total_rainfall_30d",
+                  "avg_temp_30d", "rainfall_history")}
+    accuracy = cross_validate(weather, nasa_data, ndvi_data)
+
     # Gemini advisory
     gemini = get_gemini_advisory(
         village=name, state=state, crop=crop,
@@ -601,18 +634,14 @@ def gemini_api():
         humidity=weather["humidity"],
         et0=weather["et0_today"],
         lang_code=lang,
-    )
-
-    # Gemini pest analysis
-    pest_gemini = get_gemini_pest_analysis(
-        village=name, crop=crop,
-        temp_max=weather["temp_max"],
-        temp_min=weather["temp_min"],
-        humidity=weather["humidity"],
-        ndvi=ndvi_data["ndvi"],
+        soil_moisture_deep=weather.get("soil_moisture_deep", 0.0),
         ndvi_7d_ago=ndvi_data.get("ndvi_7d_ago", ndvi_data["ndvi"]),
-        rainfall_today=weather["rainfall_today"],
-        lang_code=lang,
+        rainfall_30d=weather.get("total_rainfall_30d", 0.0),
+        normal_rain_30d=weather.get("avg_daily_rainfall_30d", 3.0) * 30,
+        temp_min=weather.get("temp_min", 20.0),
+        forecast_rain_7d=sum(weather.get("forecast_rainfall", []) or []),
+        confidence=accuracy["confidence"],
+        warnings=accuracy["warnings"],
     )
 
     return jsonify({
@@ -620,16 +649,29 @@ def gemini_api():
         "crop": crop,
         "lang": lang,
         "soil_moisture": weather["soil_moisture"],
+        "soil_moisture_deep": weather.get("soil_moisture_deep", 0.0),
         "ndvi": ndvi_data["ndvi"],
         "rainfall_7d": weather["rainfall_7d"],
         "temp_max": weather["temp_max"],
         "humidity": weather["humidity"],
         "et0": weather["et0_today"],
-        "gemini_advisory": gemini.get("advisory", ""),
-        "gemini_pest": pest_gemini.get("advisory", ""),
-        "gemini_source": gemini.get("source", "not_configured"),
-        "model": gemini.get("model", ""),
-        "timestamp": weather["timestamp"],
+        # Structured Gemini output
+        "gemini_advisory":      gemini.get("advisory", ""),
+        "drought_level":        gemini.get("drought_level", ""),
+        "drought_action":       gemini.get("drought_action", ""),
+        "pest_risk":            gemini.get("pest_risk", ""),
+        "pest_name":            gemini.get("pest_name", ""),
+        "pest_action":          gemini.get("pest_action", ""),
+        "sowing_ready":         gemini.get("sowing_ready", False),
+        "sowing_advice":        gemini.get("sowing_advice", ""),
+        "voice_message":        gemini.get("voice_message", ""),
+        "confidence_note":      gemini.get("confidence_note", ""),
+        # Data quality
+        "accuracy_confidence":  accuracy["confidence"],
+        "accuracy_warnings":    accuracy["warnings"],
+        "gemini_source":        gemini.get("source", "not_configured"),
+        "model":                gemini.get("model", ""),
+        "timestamp":            weather["timestamp"],
     })
 
 
@@ -726,6 +768,101 @@ def voice_preview():
             "source": result.get("source"),
         })
     return jsonify({"success": False, "error": result.get("error", "Generation failed")}), 500
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Farmer Feedback Loop (Layer 4)
+# ─────────────────────────────────────────────────────────────────────────────
+
+FEEDBACK_FILE = os.path.join(os.path.dirname(__file__), "data", "feedback.jsonl")
+
+
+@app.route("/api/feedback", methods=["POST"])
+def feedback_api():
+    """
+    POST /api/feedback
+    Body: {
+        "village":    "Nashik",
+        "crop":       "grapes",
+        "prediction": "drought_HIGH",
+        "correct":    true,
+        "notes":      "Optional free text from farmer"
+    }
+
+    Records farmer feedback to data/feedback.jsonl.
+    Returns running accuracy stats per crop/village.
+
+    Privacy: no phone numbers stored — only village + crop + boolean.
+    """
+    body = request.get_json(silent=True) or {}
+
+    village    = str(body.get("village", "")).strip()[:100]
+    crop       = str(body.get("crop", "")).strip()[:50].lower()
+    prediction = str(body.get("prediction", "")).strip()[:50]
+    correct    = body.get("correct")
+    notes      = str(body.get("notes", "")).strip()[:500]
+
+    if not village or correct is None:
+        return jsonify({"error": "village and correct are required fields"}), 400
+
+    entry = {
+        "ts":         datetime.utcnow().isoformat(),
+        "village":    village,
+        "crop":       crop,
+        "prediction": prediction,
+        "correct":    bool(correct),
+        "notes":      notes,
+    }
+
+    try:
+        with open(FEEDBACK_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception as e:
+        logger.error("Feedback write failed: %s", e)
+        return jsonify({"error": "Could not save feedback"}), 500
+
+    # Compute running stats
+    stats = _compute_feedback_stats(village=village, crop=crop)
+    return jsonify({"status": "saved", "stats": stats})
+
+
+def _compute_feedback_stats(village: str = None, crop: str = None) -> dict:
+    """Read feedback.jsonl and compute accuracy per village+crop combo."""
+    records = []
+    try:
+        with open(FEEDBACK_FILE, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    records.append(json.loads(line))
+    except FileNotFoundError:
+        return {"total": 0, "correct": 0, "accuracy_pct": None}
+
+    # Filter to this village/crop if requested
+    subset = records
+    if village:
+        subset = [r for r in subset if r.get("village", "").lower() == village.lower()]
+    if crop:
+        subset = [r for r in subset if r.get("crop", "").lower() == crop.lower()]
+
+    total   = len(subset)
+    correct = sum(1 for r in subset if r.get("correct"))
+    return {
+        "total":        total,
+        "correct":      correct,
+        "accuracy_pct": round(100 * correct / total, 1) if total else None,
+        "global_total": len(records),
+    }
+
+
+@app.route("/api/feedback/stats")
+def feedback_stats_api():
+    """GET /api/feedback/stats?village=Nashik&crop=grapes"""
+    village = request.args.get("village", "").strip()[:100]
+    crop    = request.args.get("crop", "").strip()[:50].lower()
+    stats   = _compute_feedback_stats(village or None, crop or None)
+    return jsonify(stats)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -88,12 +88,18 @@ def fetch_openmeteo(lat: float, lon: float) -> dict:
         hourly = raw.get("hourly", {})
         current = raw.get("current_weather", {})
 
-        # Latest hourly soil moisture (most recent non-null value)
+        # Latest hourly soil moisture — surface layer (0–1 cm)
         sm_values = hourly.get("soil_moisture_0_to_1cm", [])
         soil_moisture = next((v for v in reversed(sm_values) if v is not None), 25.0)
-        # Convert from m³/m³ (0-1) to % (multiply by 100)
+        # Convert from m³/m³ (0–1) to % (multiply by 100)
         if soil_moisture < 1.0:
             soil_moisture = round(soil_moisture * 100, 1)
+
+        # Deep soil moisture (1–3 cm) — better indicator of root-zone stress
+        sm_deep_values = hourly.get("soil_moisture_1_to_3cm", [])
+        soil_moisture_deep = next((v for v in reversed(sm_deep_values) if v is not None), 28.0)
+        if soil_moisture_deep < 1.0:
+            soil_moisture_deep = round(soil_moisture_deep * 100, 1)
 
         # Latest soil temperature
         st_values = hourly.get("soil_temperature_0cm", [])
@@ -117,6 +123,7 @@ def fetch_openmeteo(lat: float, lon: float) -> dict:
             "timestamp": datetime.utcnow().isoformat(),
             # Current
             "soil_moisture": soil_moisture,
+            "soil_moisture_deep": soil_moisture_deep,
             "soil_temp": soil_temp,
             "temp_max": temp_max_list[0] if temp_max_list else 30.0,
             "temp_min": temp_min_list[0] if temp_min_list else 20.0,
@@ -148,7 +155,7 @@ def _fallback_weather(lat: float, lon: float) -> dict:
         "source": "fallback",
         "lat": lat, "lon": lon,
         "timestamp": datetime.utcnow().isoformat(),
-        "soil_moisture": 25.0, "soil_temp": 22.0,
+        "soil_moisture": 25.0, "soil_moisture_deep": 28.0, "soil_temp": 22.0,
         "temp_max": 32.0, "temp_min": 20.0, "humidity": 60.0,
         "current_temp": 28.0, "wind_speed": 10.0,
         "rainfall_today": 0.0, "et0_today": 4.5,
