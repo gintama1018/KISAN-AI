@@ -277,8 +277,12 @@ def send_whatsapp_voice(
             _save_cached_twilio_url(filename, media_url)
         except Exception as e:
             logger.warning("Twilio Assets upload failed (%s), trying PUBLIC_BASE_URL", e)
-            # Fallback to PUBLIC_BASE_URL (ngrok / production domain)
-            base = public_base_url or os.getenv("PUBLIC_BASE_URL", "")
+            # Fallback: PUBLIC_BASE_URL > RENDER_EXTERNAL_URL (auto-set by Render) > passed param
+            base = (
+                os.getenv("PUBLIC_BASE_URL")
+                or os.getenv("RENDER_EXTERNAL_URL")   # Render sets this automatically
+                or public_base_url
+            )
             if base:
                 media_url = f"{base.rstrip('/')}/static/audio/{filename}"
             else:
