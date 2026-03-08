@@ -307,6 +307,68 @@
 </footer>
 
 <script src="/static/map.js"></script>
+
+<!-- ════════════════════════════════ KISAN AI CHAT WIDGET ══════════ -->
+<button class="chat-fab" id="chatFab" onclick="toggleChat()" title="Chat with KISAN AI">
+  🌾 <span class="chat-fab-label">Kisan AI</span>
+  <span class="chat-unread hidden" id="chatUnread">1</span>
+</button>
+
+<div class="chat-panel hidden" id="chatPanel">
+
+  <!-- Header -->
+  <div class="chat-header">
+    <div class="chat-header-info">
+      <div class="chat-avatar">🌾</div>
+      <div>
+        <div class="chat-title">KISAN AI असिस्टेंट</div>
+        <div class="chat-status" id="chatStatus">● ऑनलाइन — कोई भी सवाल पूछें</div>
+      </div>
+    </div>
+    <div class="chat-header-btns">
+      <button class="chat-call-btn" id="liveCallBtn" onclick="toggleLiveCall()">📞 Live Call</button>
+      <button class="chat-close" onclick="toggleChat()">✕</button>
+    </div>
+  </div>
+
+  <!-- Live call banner -->
+  <div class="call-banner hidden" id="callBanner">
+    <div class="call-wave"><span></span><span></span><span></span><span></span><span></span></div>
+    <div id="callStateText">🎙️ सुन रहा हूँ…</div>
+  </div>
+
+  <!-- Messages -->
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-msg assistant">
+      <div class="chat-bubble">
+        नमस्ते किसान भाई! 🌾<br>
+        मैं KISAN AI हूँ। आप मुझसे फसल, सिंचाई, कीट, बुआई — कोई भी सवाल पूछ सकते हैं।
+        नीचे टाइप करें या 🎤 माइक दबाकर बोलें।
+        <div class="chat-time">अभी</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="chat-input-area">
+    <button class="chat-mic-btn" id="micBtn" onclick="startVoiceInput()" title="Voice input">🎤</button>
+    <input type="text" class="chat-input" id="chatInput"
+           placeholder="अपना सवाल लिखें..."
+           onkeypress="if(event.key==='Enter') sendChat()" />
+    <button class="chat-send-btn" onclick="sendChat()">➤</button>
+  </div>
+
+  <div class="chat-tts-row">
+    <label class="chat-tts-label">
+      <input type="checkbox" id="chatTTS" checked /> 🔊 Voice reply
+    </label>
+    <span class="chat-lang-hint" id="chatLangHint">हिंदी</span>
+  </div>
+
+</div>
+<!-- ════════════════════════════════════════════════════════════════ -->
+
+<script src="/static/map.js"></script>
 <script>
 // ═════════════════════════════════════════════════════════════════════
 // KISAN AI — Frontend Logic
@@ -687,7 +749,220 @@ function formatTime(isoStr) {
 startLiveUpdates();
 // Auto-load first demo village
 loadDemo('Nashik', 'grapes');
-</script>
+// ═════════════════════════════════════════════════════════════════════
+// KISAN AI — Chat Widget + Voice Input + Live Call Mode
+// ═════════════════════════════════════════════════════════════════════
+
+const _langNames = {
+  hi:'हिंदी', mr:'मराठी', ta:'தமிழ்', te:'తెలుగు',
+  bn:'বাংলা', kn:'ಕನ್ನಡ', pa:'ਪੰਜਾਬੀ', gu:'ગુજરાતી', en:'English'
+};
+const _speechLangMap = {
+  hi:'hi-IN', mr:'mr-IN', ta:'ta-IN', te:'te-IN',
+  bn:'bn-IN', kn:'kn-IN', pa:'pa-IN', gu:'gu-IN', en:'en-IN'
+};
+
+let _chatOpen       = false;
+let _liveCallActive = false;
+let _recognition    = null;
+let _chatAudio      = null;
+
+// ── Open / Close panel ────────────────────────────────────────────
+function toggleChat() {
+  _chatOpen = !_chatOpen;
+  document.getElementById('chatPanel').classList.toggle('hidden', !_chatOpen);
+  document.getElementById('chatUnread').classList.add('hidden');
+  if (_chatOpen) {
+    const lang = document.getElementById('langSelect')?.value || 'hi';
+    document.getElementById('chatLangHint').textContent = _langNames[lang] || 'हिंदी';
+    setTimeout(() => document.getElementById('chatInput')?.focus(), 100);
+  }
+}
+
+// Sync lang hint when main language selector changes
+document.getElementById('langSelect').addEventListener('change', () => {
+  const lang = document.getElementById('langSelect').value;
+  document.getElementById('chatLangHint').textContent = _langNames[lang] || 'हिंदी';
+});
+
+// ── Send a message ────────────────────────────────────────────────
+async function sendChat(overrideText = null) {
+  const input   = document.getElementById('chatInput');
+  const message = (overrideText ?? input.value).trim();
+  if (!message) return;
+  if (!overrideText) input.value = '';
+
+  const lang  = document.getElementById('langSelect')?.value || 'hi';
+  const speak = document.getElementById('chatTTS')?.checked ?? true;
+
+  appendChatMsg('user', message);
+  const typingId = appendTyping();
+
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        village: currentData?.village || '',
+        crop:    currentData?.crop    || 'wheat',
+        lang,
+        speak,
+      })
+    });
+    const data = await resp.json();
+    removeTyping(typingId);
+
+    if (data.error) {
+      appendChatMsg('assistant', '❌ ' + data.error);
+      if (_liveCallActive) startListening();
+      return;
+    }
+
+    appendChatMsg('assistant', data.reply, data.audio_url);
+
+    if (data.audio_url) {
+      playAudio(data.audio_url, () => { if (_liveCallActive) startListening(); });
+    } else if (_liveCallActive) {
+      startListening();
+    }
+
+  } catch (e) {
+    removeTyping(typingId);
+    appendChatMsg('assistant', '❌ Connection error. Please try again.');
+    if (_liveCallActive) stopLiveCall();
+  }
+}
+
+// ── Append message bubble ─────────────────────────────────────────
+function appendChatMsg(role, text, audioUrl = '') {
+  const msgs = document.getElementById('chatMessages');
+  const div  = document.createElement('div');
+  div.className = `chat-msg ${role}`;
+  const now = new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+  const playBtn = audioUrl
+    ? ` <button onclick="playAudio('${audioUrl}')" style="background:none;border:none;cursor:pointer;font-size:1rem;vertical-align:middle;" title="Play voice">🔊</button>`
+    : '';
+  div.innerHTML = `<div class="chat-bubble">${escHtml(text)}${playBtn}<div class="chat-time">${now}</div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function appendTyping() {
+  const id   = 'typing_' + Date.now();
+  const msgs = document.getElementById('chatMessages');
+  const div  = document.createElement('div');
+  div.className = 'chat-msg assistant chat-typing';
+  div.id = id;
+  div.innerHTML = '<div class="chat-bubble">⌛ सोच रहा हूँ…</div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return id;
+}
+function removeTyping(id) { document.getElementById(id)?.remove(); }
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Audio playback ────────────────────────────────────────────────
+function playAudio(url, onEnded = null) {
+  if (_chatAudio) { _chatAudio.pause(); _chatAudio = null; }
+  _chatAudio = new Audio(url);
+  if (onEnded) _chatAudio.onended = onEnded;
+  _chatAudio.onerror = () => { if (onEnded) onEnded(); };
+  _chatAudio.play().catch(() => { if (onEnded) onEnded(); });
+}
+
+// ── Single-shot voice input ───────────────────────────────────────
+function startVoiceInput() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('Voice input requires Chrome or Edge browser.'); return; }
+
+  const lang   = document.getElementById('langSelect')?.value || 'hi';
+  const micBtn = document.getElementById('micBtn');
+  const sr     = new SR();
+  sr.lang             = _speechLangMap[lang] || 'hi-IN';
+  sr.interimResults   = false;
+  sr.maxAlternatives  = 1;
+
+  sr.onstart  = () => { micBtn.classList.add('listening'); micBtn.textContent = '🔴'; };
+  sr.onend    = () => { micBtn.classList.remove('listening'); micBtn.textContent = '🎤'; };
+  sr.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    document.getElementById('chatInput').value = transcript;
+    sendChat();
+  };
+  sr.onerror  = (e) => {
+    micBtn.classList.remove('listening'); micBtn.textContent = '🎤';
+    if (e.error !== 'aborted') appendChatMsg('assistant', '🎤 Voice error: ' + e.error);
+  };
+  sr.start();
+}
+
+// ── Live Call Mode (continuous voice loop) ────────────────────────
+function toggleLiveCall() {
+  _liveCallActive ? stopLiveCall() : startLiveCall();
+}
+
+function startLiveCall() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('Live Call needs speech recognition — use Chrome or Edge.'); return; }
+
+  document.getElementById('chatTTS').checked = true;   // force voice replies on
+  _liveCallActive = true;
+  document.getElementById('liveCallBtn').classList.add('active');
+  document.getElementById('liveCallBtn').textContent = '📵 End Call';
+  document.getElementById('callBanner').classList.remove('hidden');
+  document.getElementById('chatStatus').textContent  = '🔴 Live Call चल रही है';
+
+  // Open chat panel if hidden
+  if (!_chatOpen) toggleChat();
+
+  appendChatMsg('assistant', '📞 Live Call शुरू! बोलिए — KISAN AI सुन रहा है। 🌾\n(रोकने के लिए "End Call" दबाएं)');
+  startListening();
+}
+
+function stopLiveCall() {
+  _liveCallActive = false;
+  if (_recognition) { try { _recognition.stop(); } catch(_) {} _recognition = null; }
+  if (_chatAudio)   { _chatAudio.pause(); _chatAudio = null; }
+  document.getElementById('liveCallBtn').classList.remove('active');
+  document.getElementById('liveCallBtn').textContent = '📞 Live Call';
+  document.getElementById('callBanner').classList.add('hidden');
+  document.getElementById('chatStatus').textContent  = '● ऑनलाइन — कोई भी सवाल पूछें';
+  appendChatMsg('assistant', '📵 कॉल समाप्त। आपकी खेती हरी-भरी रहे! 🌾');
+}
+
+function startListening() {
+  if (!_liveCallActive) return;
+  const lang = document.getElementById('langSelect')?.value || 'hi';
+  const SR   = window.SpeechRecognition || window.webkitSpeechRecognition;
+  _recognition = new SR();
+  _recognition.lang            = _speechLangMap[lang] || 'hi-IN';
+  _recognition.interimResults  = false;
+  _recognition.maxAlternatives = 1;
+
+  _recognition.onstart  = () => {
+    document.getElementById('callStateText').textContent = '🎙️ सुन रहा हूँ…';
+  };
+  _recognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    document.getElementById('callStateText').textContent = '🤔 जवाब तैयार हो रहा है…';
+    appendChatMsg('user', transcript);
+    sendChat(transcript);   // sendChat calls startListening() after TTS finishes
+  };
+  _recognition.onerror  = (e) => {
+    if (e.error === 'no-speech') {
+      if (_liveCallActive) startListening();   // just silence — keep looping
+    } else {
+      appendChatMsg('assistant', '🎤 Speech error: ' + e.error);
+      stopLiveCall();
+    }
+  };
+  _recognition.start();
+}</script>
 
 </body>
 </html>

@@ -308,3 +308,40 @@ Respond only in {lang_name}. No English. No explanation."""
         logger.error("Gemini pest analysis error: %s", e)
         return {"advisory": "", "source": "error", "error": str(e)}
 
+
+def get_gemini_chat_reply(
+    message: str,
+    lang_code: str = "hi",
+    village_context: str = "",
+) -> str:
+    """
+    Conversational reply for the chat widget / live call mode.
+    Returns plain text (2-3 sentences max). Fast — no JSON parsing.
+    """
+    api_key = os.getenv("GEMINI_API_KEY", "")
+    if not api_key or api_key.startswith("your_"):
+        return "Gemini AI not configured. Please set GEMINI_API_KEY in Render dashboard."
+
+    lang_name = _LANG_NAMES.get(lang_code, "Hindi")
+    context_block = f"\n\nCurrent satellite data for this farmer:\n{village_context}" if village_context else ""
+
+    prompt = (
+        f"You are KISAN AI — a friendly, knowledgeable agricultural advisor for Indian farmers. "
+        f"You help with crop diseases, irrigation, sowing timing, pest control, weather, and farming practices. "
+        f"Address the farmer warmly as 'किसान भाई' or the regional equivalent.{context_block}\n\n"
+        f"Rules:\n"
+        f"- Answer ONLY in {lang_name}\n"
+        f"- Keep it to 2-3 short sentences\n"
+        f"- Be specific and practical — no vague advice\n"
+        f"- Use simple language a farmer can understand\n\n"
+        f"Farmer's question: {message}\n"
+        f"KISAN AI ({lang_name}):"
+    )
+
+    try:
+        raw, _ = _call_gemini(prompt, api_key)
+        return raw.strip()
+    except Exception as e:
+        logger.error("Gemini chat failed: %s", e)
+        return "माफ करें, अभी सलाह उपलब्ध नहीं है। कृपया दोबारा पूछें।"
+

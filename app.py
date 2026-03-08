@@ -873,8 +873,109 @@ def feedback_stats_api():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Gemini Chat + Audio Serving
+# ─────────────────────────────────────────────────────────────────────────────
+
+import re as _re
+
+@app.route("/api/chat", methods=["POST"])
+def chat_api():
+    """
+    POST /api/chat
+    Body: {
+        "message": "मेरी फसल में पीलापन आ रहा है",
+        "village": "Nashik",   # optional — adds live satellite context
+        "crop":    "grapes",
+        "lang":    "hi",
+        "speak":   true        # generate ElevenLabs TTS, return audio_url
+    }
+    Returns: { "reply": str, "audio_url": str }
+    """
+    from ai.gemini import get_gemini_chat_reply
+    from ai.voice import generate_voice_alert
+
+    body         = request.get_json(silent=True) or {}
+    message      = body.get("message", "").strip()[:500]
+    village_name = body.get("village", "").strip()[:100]
+    crop         = body.get("crop", "wheat").strip()[:50].lower()
+    lang         = body.get("lang", "hi").strip()[:5]
+    speak        = bool(body.get("speak", False))
+
+    if not message:
+        return jsonify({"error": "Message required"}), 400
+    if lang not in SUPPORTED_LANGUAGES:
+        lang = "hi"
+
+    # Build live satellite context string
+    context_lines = []
+    if village_name:
+        vobj = VILLAGES_BY_NAME.get(village_name.lower())
+        if vobj:
+            lat, lon = vobj["lat"], vobj["lon"]
+            crop = crop or vobj.get("crop", "wheat")
+        else:
+            geo = geocode_village(village_name)
+            lat, lon = (geo["lat"], geo["lon"]) if geo else (None, None)
+        if lat and lon:
+            try:
+                adv = build_village_advisory(lat, lon, village_name, crop or "wheat", lang)
+                context_lines = [
+                    f"Village: {village_name}, Crop: {crop}",
+                    f"Soil moisture: {adv.get('soil_moisture','?')}%",
+                    f"Drought risk: {adv.get('drought',{}).get('level','?')}",
+                    f"Pest: {adv.get('pest',{}).get('pest','?')} ({adv.get('pest',{}).get('risk','?')})",
+                    f"Rainfall (7d): {adv.get('rainfall_7d','?')} mm",
+                    f"Max temp: {adv.get('temp_max','?')}°C",
+                ]
+            except Exception:
+                pass
+
+    reply = get_gemini_chat_reply(message, lang, "\n".join(context_lines))
+
+    # ElevenLabs TTS
+    audio_url = ""
+    if speak and reply:
+        try:
+            voice = generate_voice_alert(reply, lang)
+            if voice.get("success"):
+                filename = voice["filename"]
+                import shutil
+                src = voice["file_path"]
+                dst = f"/tmp/{filename}"
+                if not os.path.exists(dst):
+                    shutil.copy2(src, dst)
+                base = (
+                    os.getenv("PUBLIC_BASE_URL")
+                    or os.getenv("RENDER_EXTERNAL_URL")
+                    or request.host_url.rstrip("/")
+                )
+                audio_url = f"{base.rstrip('/')}/api/audio/{filename}"
+        except Exception as e:
+            logger.warning("Chat TTS failed: %s", e)
+
+    return jsonify({"reply": reply, "audio_url": audio_url})
+
+
+@app.route("/api/audio/<filename>")
+def serve_audio(filename):
+    """Serve ElevenLabs MP3s. Checks /tmp (Render) then static/audio (local)."""
+    # Security: only allow kisan_<12 hex chars>.mp3
+    if not _re.fullmatch(r"kisan_[a-f0-9]{12}\.mp3", filename):
+        return jsonify({"error": "Invalid filename"}), 400
+    from flask import send_file
+    tmp_path    = f"/tmp/{filename}"
+    static_path = os.path.join(os.path.dirname(__file__), "static", "audio", filename)
+    if os.path.exists(tmp_path):
+        return send_file(tmp_path, mimetype="audio/mpeg")
+    if os.path.exists(static_path):
+        return send_file(static_path, mimetype="audio/mpeg")
+    return jsonify({"error": "Audio not found"}), 404
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+
     port = int(os.getenv("PORT", 5000))
     debug = os.getenv("FLASK_ENV", "development") == "development"
     logger.info("Starting KISAN AI on http://localhost:%d", port)
