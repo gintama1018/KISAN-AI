@@ -70,9 +70,9 @@ def fetch_openmeteo(lat: float, lon: float) -> dict:
             "weathercode",
         ],
         "hourly": [
-            "soil_moisture_0_to_1cm",
-            "soil_moisture_1_to_3cm",
-            "soil_temperature_0cm",
+            "soil_moisture_9_to_27cm",    # root zone — agronomically meaningful
+            "soil_moisture_27_to_81cm",   # deep root zone
+            "soil_temperature_6cm",       # root zone temperature
         ],
         "current_weather": True,
         "timezone": "Asia/Kolkata",
@@ -88,21 +88,21 @@ def fetch_openmeteo(lat: float, lon: float) -> dict:
         hourly = raw.get("hourly", {})
         current = raw.get("current_weather", {})
 
-        # Latest hourly soil moisture — surface layer (0–1 cm)
-        sm_values = hourly.get("soil_moisture_0_to_1cm", [])
+        # Root-zone soil moisture (9–27 cm) — what crop roots actually feel
+        sm_values = hourly.get("soil_moisture_9_to_27cm", [])
         soil_moisture = next((v for v in reversed(sm_values) if v is not None), 25.0)
-        # Convert from m³/m³ (0–1) to % (multiply by 100)
+        # Open-Meteo returns m³/m³ (0–1); convert to % (× 100)
         if soil_moisture < 1.0:
             soil_moisture = round(soil_moisture * 100, 1)
 
-        # Deep soil moisture (1–3 cm) — better indicator of root-zone stress
-        sm_deep_values = hourly.get("soil_moisture_1_to_3cm", [])
+        # Deep root-zone soil moisture (27–81 cm) — sub-soil water reserve
+        sm_deep_values = hourly.get("soil_moisture_27_to_81cm", [])
         soil_moisture_deep = next((v for v in reversed(sm_deep_values) if v is not None), 28.0)
         if soil_moisture_deep < 1.0:
             soil_moisture_deep = round(soil_moisture_deep * 100, 1)
 
-        # Latest soil temperature
-        st_values = hourly.get("soil_temperature_0cm", [])
+        # Root-zone soil temperature (6 cm)
+        st_values = hourly.get("soil_temperature_6cm", [])
         soil_temp = next((v for v in reversed(st_values) if v is not None), 22.0)
 
         # 7-day totals

@@ -155,10 +155,84 @@ def _estimate_ndvi_fallback(lat: float, lon: float) -> dict:
     }
 
 
+def fetch_modis_ndvi(lat: float, lon: float) -> dict:
+    """
+    Fetch NDVI from NASA MODIS MOD13Q1 product (250 m, 16-day composite)
+    via the ORNL DAAC REST API — completely free, no API key required.
+    Falls back to seasonal estimate on any error.
+    """
+    from datetime import timedelta
+
+    now = datetime.utcnow()
+    start = now - timedelta(days=40)  # 2-3 composite windows
+
+    def to_modis_date(dt: datetime) -> str:
+        return f"A{dt.year}{dt.timetuple().tm_yday:03d}"
+
+    url = "https://modis.ornl.gov/rst/api/v1/MOD13Q1/subset"
+    params = {
+        "latitude":      lat,
+        "longitude":     lon,
+        "startDate":     to_modis_date(start),
+        "endDate":       to_modis_date(now),
+        "kmAboveBelow":  0,
+        "kmLeftRight":   0,
+    }
+    headers = {"Accept": "application/json"}
+
+    try:
+        r = requests.get(url, params=params, headers=headers, timeout=20)
+        r.raise_for_status()
+        data = r.json()
+
+        subsets = [
+            s for s in data.get("subset", [])
+            if s.get("band") == "250m_16_days_NDVI"
+        ]
+        if not subsets:
+            logger.warning("MODIS: no NDVI band found — using seasonal estimate")
+            return _estimate_ndvi_fallback(lat, lon)
+
+        subsets.sort(key=lambda s: s.get("calendar_date", ""))
+
+        def _mean_ndvi(subset: dict) -> Optional[float]:
+            vals = [v for v in subset.get("data", []) if v is not None and v > -2000]
+            if not vals:
+                return None
+            return round(max(0.0, min(1.0, (sum(vals) / len(vals)) * 0.0001)), 3)
+
+        latest_ndvi = _mean_ndvi(subsets[-1])
+        prev_ndvi   = _mean_ndvi(subsets[-2]) if len(subsets) >= 2 else None
+
+        if latest_ndvi is None:
+            logger.warning("MODIS: all fill values — using seasonal estimate")
+            return _estimate_ndvi_fallback(lat, lon)
+
+        if prev_ndvi is None:
+            prev_ndvi = latest_ndvi
+
+        cal_date = subsets[-1].get("calendar_date", "unknown")
+        logger.info("MODIS NDVI: %.3f (prev %.3f) from %s", latest_ndvi, prev_ndvi, cal_date)
+
+        return {
+            "ndvi":           latest_ndvi,
+            "ndvi_7d_ago":    prev_ndvi,
+            "ndvi_trend":     "improving" if latest_ndvi > prev_ndvi else "declining",
+            "ndvi_drop_7d":   round(prev_ndvi - latest_ndvi, 3),
+            "source":         "nasa-modis-mod13q1",
+            "last_image_date": cal_date,
+        }
+
+    except Exception as e:
+        logger.error("MODIS NDVI fetch failed (%s) — using seasonal estimate", e)
+        return _estimate_ndvi_fallback(lat, lon)
+
+
 def fetch_ndvi(lat: float, lon: float) -> dict:
     """
-    Public interface: fetch NDVI using AgroMonitoring if key is set,
-    otherwise fall back to seasonal estimation.
+    Priority: AgroMonitoring (if key set) → NASA MODIS MOD13Q1 → seasonal estimate.
     """
     api_key = os.getenv("AGRO_API_KEY", "")
-    return fetch_ndvi_agromonitoring(lat, lon, api_key)
+    if api_key and not api_key.startswith("your_"):
+        return fetch_ndvi_agromonitoring(lat, lon, api_key)
+    return fetch_modis_ndvi(lat, lon)

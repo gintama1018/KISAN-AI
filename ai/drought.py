@@ -29,7 +29,7 @@ def _get_crop_thresholds(crop: str) -> dict:
     crop_key = crop.lower().strip() if crop else "default"
     return thresholds.get(crop_key, thresholds.get("default", {
         "soil_moisture_critical": 20,
-        "soil_moisture_moderate": 30,
+        "soil_moisture_warning":  30,   # matches crop_thresholds.json key name
         "ndvi_healthy": 0.55,
         "ndvi_moderate": 0.35,
         "ndvi_critical": 0.20,
@@ -58,7 +58,7 @@ def drought_risk_model(
 
     # ── Soil Moisture (40% weight) ────────────────────────────────────────────
     sm_critical = t.get("soil_moisture_critical", 20)
-    sm_moderate = t.get("soil_moisture_moderate", 30)
+    sm_moderate = t.get("soil_moisture_warning", t.get("soil_moisture_moderate", 30))  # fixed key name
 
     if soil_moisture < sm_critical:
         score += 40
